@@ -15,21 +15,28 @@ public class LevelUtils {
 
         DimensionConfig dimConfig = SlashRegistry.getDimensionConfig(world);
 
-        int lvl = 1;
+        int lvl = dimConfig.MINIMUM_MOB_LEVEL;
+        double distance = world.getSpawnPoint().manhattanDistance(pos);
+
+        if (distance > dimConfig.MOB_LEVEL_ONE_AREA) {
+            lvl = (int) (1 + ((distance - dimConfig.MOB_LEVEL_ONE_AREA) / dimConfig.MOB_LEVEL_PER_DISTANCE));
+        }
 
         if (dimConfig.SCALE_MOB_LEVEL_TO_NEAREST_PLAYER) {
             PlayerEntity player = world.getClosestPlayer(pos.getX(), pos.getY(), pos.getZ(), (double) 3000, EntityPredicates.NOT_SPECTATING);
 
             if (player != null) {
-                lvl = Load.Unit(player).getLevel();
+                int playerLevel= Load.Unit(player).getLevel();
+                if(playerLevel<lvl){
+                    lvl= RandomUtils.RandomRange(playerLevel,lvl);
+                }else{
+                    lvl= RandomUtils.RandomRange(lvl,playerLevel);
+                }
             }
 
-        } else {
-            lvl = determineLevelPerDistanceFromSpawn(world, pos, dimConfig);
         }
 
         lvl = MathHelper.clamp(lvl, dimConfig.MINIMUM_MOB_LEVEL, dimConfig.MAXIMUM_MOB_LEVEL);
-
         return lvl;
     }
 
